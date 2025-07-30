@@ -149,9 +149,9 @@ REACT_APP_TELEGRAM_BOT_USERNAME=your_bot_username
 ## 🧪 Тестирование
 
 ### Backend тесты
+Запустите юнит-тесты из корня проекта:
 ```bash
-cd backend
-pytest tests/
+pytest backend/tests
 ```
 
 ### Frontend тесты

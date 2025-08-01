@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from typing import Dict, List
+from typing import Dict, List, Any
 from pydantic import BaseModel
 from backend.utils.dependencies import get_user_id
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -36,12 +36,12 @@ class ListingAnalysisRequest(BaseModel):
 @router.post("/suggest-response", response_model=AIResponse)
 async def suggest_response(
     request: ResponseSuggestionRequest, user_id: str = Depends(get_user_id)
-):
+) -> AIResponse:  # type: ignore[func-returns-value]
     """Предложить ответ клиенту на основе истории переписки"""
 
     # Проверяем существование клиента
-    client = await db.clients.find_one({"id": request.client_id, "user_id": user_id})
-    if not client:
+    client = await db.clients.find_one({"id": request.client_id, "user_id": user_id})  # type: ignore[func-returns-value]
+    if client is None:
         raise HTTPException(status_code=404, detail="Client not found")
 
     # Получаем последние сообщения
@@ -66,12 +66,12 @@ async def suggest_response(
 @router.post("/close-deal-tips", response_model=AIResponse)
 async def get_close_deal_tips(
     request: ResponseSuggestionRequest, user_id: str = Depends(get_user_id)
-):
+) -> AIResponse:  # type: ignore[func-returns-value]
     """Получить советы по закрытию сделки"""
 
     # Проверяем существование клиента
-    client = await db.clients.find_one({"id": request.client_id, "user_id": user_id})
-    if not client:
+    client = await db.clients.find_one({"id": request.client_id, "user_id": user_id})  # type: ignore[func-returns-value]
+    if client is None:
         raise HTTPException(status_code=404, detail="Client not found")
 
     # Пока что возвращаем заглушку
@@ -90,7 +90,7 @@ async def get_close_deal_tips(
 @router.post("/analyze-listing", response_model=AIResponse)
 async def analyze_listing(
     request: ListingAnalysisRequest, user_id: str = Depends(get_user_id)
-):
+) -> AIResponse:
     """Анализ объявления и предложения по улучшению"""
 
     # Пока что возвращаем заглушку
@@ -109,7 +109,7 @@ async def analyze_listing(
 @router.post("/generate-response")
 async def generate_custom_response(
     request: AIRequest, user_id: str = Depends(get_user_id)
-):
+) -> Dict[str, str]:
     """Генерация кастомного ответа по запросу"""
 
     # Пока что возвращаем заглушку
@@ -132,11 +132,11 @@ async def generate_custom_response(
 
 
 @router.get("/settings")
-async def get_ai_settings(user_id: str = Depends(get_user_id)):
+async def get_ai_settings(user_id: str = Depends(get_user_id)) -> Dict[str, Any]:  # type: ignore[func-returns-value]
     """Получить настройки AI-ассистента"""
 
     # Получаем настройки из БД или возвращаем дефолтные
-    settings = await db.ai_settings.find_one({"user_id": user_id})
+    settings = await db.ai_settings.find_one({"user_id": user_id})  # type: ignore[func-returns-value]
 
     if not settings:
         settings = {
@@ -151,7 +151,7 @@ async def get_ai_settings(user_id: str = Depends(get_user_id)):
 
 
 @router.post("/settings")
-async def update_ai_settings(settings: Dict, user_id: str = Depends(get_user_id)):
+async def update_ai_settings(settings: Dict[str, Any], user_id: str = Depends(get_user_id)) -> Dict[str, str]:
     """Обновить настройки AI-ассистента"""
 
     settings["user_id"] = user_id

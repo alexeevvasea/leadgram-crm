@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from typing import List, Dict
+from typing import List, Dict, Any
 from backend.models.automation import Automation, AutomationCreate, AutomationUpdate
 from backend.utils.dependencies import get_user_id
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -15,7 +15,7 @@ db = client[os.environ["DB_NAME"]]
 
 
 @router.get("/", response_model=List[Automation])
-async def get_automations(user_id: str = Depends(get_user_id)):
+async def get_automations(user_id: str = Depends(get_user_id)) -> List[Automation]:
     """Получить список автоматизаций"""
     cursor = db.automations.find({"user_id": user_id})
     automations = await cursor.to_list(length=100)
@@ -25,7 +25,7 @@ async def get_automations(user_id: str = Depends(get_user_id)):
 @router.post("/", response_model=Automation)
 async def create_automation(
     automation_data: AutomationCreate, user_id: str = Depends(get_user_id)
-):
+) -> Automation:
     """Создать новую автоматизацию"""
     automation = Automation(**automation_data.model_dump(), user_id=user_id)
     await db.automations.insert_one(automation.model_dump())
@@ -33,14 +33,13 @@ async def create_automation(
 
 
 @router.get("/{automation_id}", response_model=Automation)
-async def get_automation(automation_id: str, user_id: str = Depends(get_user_id)):
+async def get_automation(automation_id: str, user_id: str = Depends(get_user_id)) -> Automation:  # type: ignore[func-returns-value]
     """Получить автоматизацию по ID"""
-    automation = await db.automations.find_one(
-        {"id": automation_id, "user_id": user_id}
-    )
-    if not automation:
+    automation = await db.automations.find_one({"id": automation_id, "user_id": user_id})  # type: ignore[func-returns-value]
+    if automation is None:
         raise HTTPException(status_code=404, detail="Automation not found")
-    return Automation(**automation)
+    else:
+        return Automation(**automation)
 
 
 @router.put("/{automation_id}", response_model=Automation)
@@ -48,7 +47,7 @@ async def update_automation(
     automation_id: str,
     update_data: AutomationUpdate,
     user_id: str = Depends(get_user_id),
-):
+) -> Automation:
     """Обновить автоматизацию"""
     update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
 
@@ -63,7 +62,7 @@ async def update_automation(
 
 
 @router.delete("/{automation_id}")
-async def delete_automation(automation_id: str, user_id: str = Depends(get_user_id)):
+async def delete_automation(automation_id: str, user_id: str = Depends(get_user_id)) -> Dict[str, str]:
     """Удалить автоматизацию"""
     result = await db.automations.delete_one({"id": automation_id, "user_id": user_id})
     if result.deleted_count == 0:
@@ -74,12 +73,10 @@ async def delete_automation(automation_id: str, user_id: str = Depends(get_user_
 @router.post("/{automation_id}/trigger")
 async def trigger_automation(
     automation_id: str, trigger_data: Dict, user_id: str = Depends(get_user_id)
-):
+) -> Dict[str, Any]:  # type: ignore[func-returns-value]
     """Запустить автоматизацию вручную"""
-    automation = await db.automations.find_one(
-        {"id": automation_id, "user_id": user_id}
-    )
-    if not automation:
+    automation = await db.automations.find_one({"id": automation_id, "user_id": user_id})  # type: ignore[func-returns-value]
+    if automation is None:
         raise HTTPException(status_code=404, detail="Automation not found")
 
     # Если есть n8n workflow, вызываем его
@@ -103,7 +100,8 @@ async def trigger_automation(
 @router.get("/{automation_id}/logs")
 async def get_automation_logs(
     automation_id: str, user_id: str = Depends(get_user_id), limit: int = 50
-):
+) -> List[Dict[str, Any]]:
+
     """Получить логи выполнения автоматизации"""
     cursor = (
         db.automation_logs.find({"automation_id": automation_id, "user_id": user_id})
@@ -118,12 +116,10 @@ async def get_automation_logs(
 @router.post("/{automation_id}/test")
 async def test_automation(
     automation_id: str, test_data: Dict, user_id: str = Depends(get_user_id)
-):
+) -> Dict[str, Any]:  # type: ignore[func-returns-value]
     """Тестировать автоматизацию"""
-    automation = await db.automations.find_one(
-        {"id": automation_id, "user_id": user_id}
-    )
-    if not automation:
+    automation = await db.automations.find_one({"id": automation_id, "user_id": user_id})  # type: ignore[func-returns-value]
+    if automation is None:
         raise HTTPException(status_code=404, detail="Automation not found")
 
     # Имитация теста
@@ -135,9 +131,9 @@ async def test_automation(
 
 
 @router.get("/templates/")
-async def get_automation_templates():
+async def get_automation_templates() -> List[Dict[str, Any]]:
     """Получить шаблоны автоматизации"""
-    templates = [
+    templates: List[Dict[str, Any]] = [
         {
             "id": "auto_reply",
             "name": "Автоответ на новые сообщения",
@@ -180,7 +176,7 @@ async def get_automation_templates():
     return templates
 
 
-async def trigger_n8n_workflow(workflow_id: str, data: Dict):
+async def trigger_n8n_workflow(workflow_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
     """Запуск n8n workflow"""
     # Здесь должна быть интеграция с n8n
     # Пока что заглушка

@@ -31,8 +31,8 @@ async def create_integration(
     user_id: str = Depends(get_user_id)
 ):
     """Создать новую интеграцию"""
-    integration = Integration(**integration_data.dict(), user_id=user_id)
-    await db.integrations.insert_one(integration.dict())
+    integration = Integration(**integration_data.model_dump(), user_id=user_id)
+    await db.integrations.insert_one(integration.model_dump())
     return integration
 
 @router.get("/{integration_id}", response_model=Integration)
@@ -53,7 +53,7 @@ async def update_integration(
     user_id: str = Depends(get_user_id)
 ):
     """Обновить интеграцию"""
-    update_dict = {k: v for k, v in update_data.dict().items() if v is not None}
+    update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
     
     result = await db.integrations.update_one(
         {"id": integration_id, "user_id": user_id},

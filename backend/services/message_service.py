@@ -8,8 +8,8 @@ class MessageService:
         self.collection = collection
 
     async def create_message(self, message_data: MessageCreate, user_id: str) -> Message:
-        message = Message(**message_data.dict(), user_id=user_id)
-        await self.collection.insert_one(message.dict())
+        message = Message(**message_data.model_dump(), user_id=user_id)
+        await self.collection.insert_one(message.model_dump())
         return message
 
     async def get_client_messages(self, client_id: str, user_id: str, limit: int = 100) -> List[Message]:

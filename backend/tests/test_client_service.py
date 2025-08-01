@@ -6,7 +6,13 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from backend.services.client_service import ClientService
-from backend.models.client import ClientCreate, ClientUpdate, MessageSource, ClientStatus
+from backend.models.client import (
+    ClientCreate,
+    ClientUpdate,
+    MessageSource,
+    ClientStatus,
+)
+
 
 class FakeCursor:
     def __init__(self, docs):
@@ -26,6 +32,7 @@ class FakeCursor:
         if length is None:
             length = self._limit
         return self.docs[:length]
+
 
 class FakeCollection:
     def __init__(self):
@@ -54,11 +61,15 @@ class FakeCollection:
                     doc[k] = v
                 for k, v in update.get("$inc", {}).items():
                     doc[k] = doc.get(k, 0) + v
+
                 class Result:
                     modified_count = 1
+
                 return Result()
+
         class Result:
             modified_count = 0
+
         return Result()
 
     async def count_documents(self, query):
@@ -83,9 +94,22 @@ def test_create_and_get_client():
 def test_get_clients_filters():
     collection = FakeCollection()
     service = ClientService(collection)
-    run(service.create_client(ClientCreate(name="A", source=MessageSource.TELEGRAM), user_id="1"))
-    run(service.create_client(ClientCreate(name="B", source=MessageSource.OLX, listing_title="ad"), user_id="1"))
-    run(service.create_client(ClientCreate(name="C", source=MessageSource.TELEGRAM), user_id="2"))
+    run(
+        service.create_client(
+            ClientCreate(name="A", source=MessageSource.TELEGRAM), user_id="1"
+        )
+    )
+    run(
+        service.create_client(
+            ClientCreate(name="B", source=MessageSource.OLX, listing_title="ad"),
+            user_id="1",
+        )
+    )
+    run(
+        service.create_client(
+            ClientCreate(name="C", source=MessageSource.TELEGRAM), user_id="2"
+        )
+    )
 
     clients = run(service.get_clients(user_id="1"))
     assert len(clients) == 2
@@ -97,9 +121,17 @@ def test_get_clients_filters():
 def test_update_client():
     collection = FakeCollection()
     service = ClientService(collection)
-    created = run(service.create_client(ClientCreate(name="Old", source=MessageSource.TELEGRAM), user_id="1"))
+    created = run(
+        service.create_client(
+            ClientCreate(name="Old", source=MessageSource.TELEGRAM), user_id="1"
+        )
+    )
 
-    updated = run(service.update_client(created.id, "1", ClientUpdate(name="New", status=ClientStatus.CLOSED)))
+    updated = run(
+        service.update_client(
+            created.id, "1", ClientUpdate(name="New", status=ClientStatus.CLOSED)
+        )
+    )
     assert updated is not None
     assert updated.name == "New"
     assert updated.status == ClientStatus.CLOSED

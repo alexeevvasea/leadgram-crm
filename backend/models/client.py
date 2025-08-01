@@ -4,15 +4,18 @@ from datetime import datetime
 from enum import Enum
 import uuid
 
+
 class ClientStatus(str, Enum):
     NEW = "new"
     IN_PROGRESS = "in_progress"
     CLOSED = "closed"
 
+
 class MessageSource(str, Enum):
     TELEGRAM = "telegram"
     WHATSAPP = "whatsapp"
     OLX = "olx"
+
 
 class Client(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -28,12 +31,14 @@ class Client(BaseModel):
     messages_count: int = 0
     user_id: str  # Telegram user ID владельца
 
+
 class ClientCreate(BaseModel):
     name: str
     phone: Optional[str] = None
     source: MessageSource
     listing_id: Optional[str] = None
     listing_title: Optional[str] = None
+
 
 class ClientUpdate(BaseModel):
     name: Optional[str] = None

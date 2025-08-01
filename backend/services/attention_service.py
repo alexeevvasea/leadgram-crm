@@ -1,5 +1,6 @@
 from motor.motor_asyncio import AsyncIOMotorCollection
 from typing import List, Dict
+from backend.models.message import MessageType
 from datetime import datetime, timedelta
 
 class AttentionService:
@@ -24,7 +25,7 @@ class AttentionService:
                 "$match": {
                     "user_id": user_id,
                     "timestamp": {"$gte": two_days_ago},
-                    "message_type": "incoming"
+                    "message_type": MessageType.INCOMING.value
                 }
             },
             {
@@ -108,9 +109,9 @@ class AttentionService:
             outgoing = 0
             
             for msg in result["messages"]:
-                if msg["type"] == "incoming":
+                if msg["type"] == MessageType.INCOMING.value:
                     incoming = msg["count"]
-                elif msg["type"] == "outgoing":
+                elif msg["type"] == MessageType.OUTGOING.value:
                     outgoing = msg["count"]
             
             # Если входящих >3, а ответов <1

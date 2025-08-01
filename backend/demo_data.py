@@ -2,6 +2,7 @@ import asyncio
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime, timedelta
+from backend.models.message import MessageType
 import uuid
 
 # Подключение к MongoDB
@@ -110,7 +111,7 @@ async def create_demo_data():
                     "id": str(uuid.uuid4()),
                     "client_id": client_id,
                     "content": f"Привет! Интересует {client['listing_title']}. Можно встретиться?",
-                    "message_type": "incoming",
+                    "message_type": MessageType.INCOMING.value,
                     "source": client["source"],
                     "timestamp": datetime.utcnow() - timedelta(minutes=60-j*10),
                     "is_read": j > 0,
@@ -121,7 +122,7 @@ async def create_demo_data():
                     "id": str(uuid.uuid4()),
                     "client_id": client_id,
                     "content": f"Здравствуйте! Да, товар доступен. Когда удобно встретиться?",
-                    "message_type": "outgoing",
+                    "message_type": MessageType.OUTGOING.value,
                     "source": "system",
                     "timestamp": datetime.utcnow() - timedelta(minutes=60-j*10-5),
                     "is_read": True,

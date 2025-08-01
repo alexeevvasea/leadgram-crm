@@ -6,22 +6,23 @@ from backend.models.message import MessageType
 import uuid
 
 # Подключение к MongoDB
-mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ.get('DB_NAME', 'leadgram_db')]
+db = client[os.environ.get("DB_NAME", "leadgram_db")]
+
 
 async def create_demo_data():
     """Создает демо-данные для тестирования"""
-    
+
     # Очистка существующих данных
     await db.clients.delete_many({})
     await db.messages.delete_many({})
     await db.listings.delete_many({})
     await db.integrations.delete_many({})
     await db.automations.delete_many({})
-    
+
     user_id = "123456789"  # Тестовый пользователь
-    
+
     # Создание клиентов
     clients = [
         {
@@ -36,7 +37,7 @@ async def create_demo_data():
             "updated_at": datetime.utcnow() - timedelta(minutes=15),
             "last_message_at": datetime.utcnow() - timedelta(minutes=15),
             "messages_count": 3,
-            "user_id": user_id
+            "user_id": user_id,
         },
         {
             "id": str(uuid.uuid4()),
@@ -50,7 +51,7 @@ async def create_demo_data():
             "updated_at": datetime.utcnow() - timedelta(minutes=30),
             "last_message_at": datetime.utcnow() - timedelta(minutes=30),
             "messages_count": 5,
-            "user_id": user_id
+            "user_id": user_id,
         },
         {
             "id": str(uuid.uuid4()),
@@ -64,7 +65,7 @@ async def create_demo_data():
             "updated_at": datetime.utcnow() - timedelta(hours=1),
             "last_message_at": datetime.utcnow() - timedelta(hours=1),
             "messages_count": 1,
-            "user_id": user_id
+            "user_id": user_id,
         },
         {
             "id": str(uuid.uuid4()),
@@ -78,7 +79,7 @@ async def create_demo_data():
             "updated_at": datetime.utcnow() - timedelta(hours=2),
             "last_message_at": datetime.utcnow() - timedelta(hours=2),
             "messages_count": 8,
-            "user_id": user_id
+            "user_id": user_id,
         },
         {
             "id": str(uuid.uuid4()),
@@ -92,46 +93,51 @@ async def create_demo_data():
             "updated_at": datetime.utcnow() - timedelta(hours=3),
             "last_message_at": datetime.utcnow() - timedelta(hours=3),
             "messages_count": 2,
-            "user_id": user_id
-        }
+            "user_id": user_id,
+        },
     ]
-    
+
     # Вставка клиентов
     await db.clients.insert_many(clients)
-    
+
     # Создание сообщений
     messages = []
     for i, client in enumerate(clients):
         client_id = client["id"]
-        
+
         # Создаем несколько сообщений для каждого клиента
         for j in range(client["messages_count"]):
             if j % 2 == 0:  # Входящие сообщения
-                messages.append({
-                    "id": str(uuid.uuid4()),
-                    "client_id": client_id,
-                    "content": f"Привет! Интересует {client['listing_title']}. Можно встретиться?",
-                    "message_type": MessageType.INCOMING.value,
-                    "source": client["source"],
-                    "timestamp": datetime.utcnow() - timedelta(minutes=60-j*10),
-                    "is_read": j > 0,
-                    "user_id": user_id
-                })
+                messages.append(
+                    {
+                        "id": str(uuid.uuid4()),
+                        "client_id": client_id,
+                        "content": f"Привет! Интересует {client['listing_title']}. Можно встретиться?",
+                        "message_type": MessageType.INCOMING.value,
+                        "source": client["source"],
+                        "timestamp": datetime.utcnow() - timedelta(minutes=60 - j * 10),
+                        "is_read": j > 0,
+                        "user_id": user_id,
+                    }
+                )
             else:  # Исходящие сообщения
-                messages.append({
-                    "id": str(uuid.uuid4()),
-                    "client_id": client_id,
-                    "content": f"Здравствуйте! Да, товар доступен. Когда удобно встретиться?",
-                    "message_type": MessageType.OUTGOING.value,
-                    "source": "system",
-                    "timestamp": datetime.utcnow() - timedelta(minutes=60-j*10-5),
-                    "is_read": True,
-                    "user_id": user_id
-                })
-    
+                messages.append(
+                    {
+                        "id": str(uuid.uuid4()),
+                        "client_id": client_id,
+                        "content": f"Здравствуйте! Да, товар доступен. Когда удобно встретиться?",
+                        "message_type": MessageType.OUTGOING.value,
+                        "source": "system",
+                        "timestamp": datetime.utcnow()
+                        - timedelta(minutes=60 - j * 10 - 5),
+                        "is_read": True,
+                        "user_id": user_id,
+                    }
+                )
+
     # Вставка сообщений
     await db.messages.insert_many(messages)
-    
+
     # Создание объявлений
     listings = [
         {
@@ -146,7 +152,7 @@ async def create_demo_data():
             "user_id": user_id,
             "messages_48h": 8,
             "responses_count": 2,
-            "last_response_at": datetime.utcnow() - timedelta(hours=2)
+            "last_response_at": datetime.utcnow() - timedelta(hours=2),
         },
         {
             "id": "listing_2",
@@ -160,13 +166,13 @@ async def create_demo_data():
             "user_id": user_id,
             "messages_48h": 3,
             "responses_count": 3,
-            "last_response_at": datetime.utcnow() - timedelta(hours=1)
-        }
+            "last_response_at": datetime.utcnow() - timedelta(hours=1),
+        },
     ]
-    
+
     # Вставка объявлений
     await db.listings.insert_many(listings)
-    
+
     # Создание интеграций
     integrations = [
         {
@@ -174,9 +180,12 @@ async def create_demo_data():
             "name": "Telegram Bot",
             "type": "telegram",
             "status": "active",
-            "config": {"bot_token": "demo_token", "webhook_url": "https://example.com/webhook"},
+            "config": {
+                "bot_token": "demo_token",
+                "webhook_url": "https://example.com/webhook",
+            },
             "created_at": datetime.utcnow() - timedelta(days=1),
-            "user_id": user_id
+            "user_id": user_id,
         },
         {
             "id": str(uuid.uuid4()),
@@ -185,19 +194,20 @@ async def create_demo_data():
             "status": "inactive",
             "config": {"phone_number": "+1234567890"},
             "created_at": datetime.utcnow() - timedelta(days=2),
-            "user_id": user_id
-        }
+            "user_id": user_id,
+        },
     ]
-    
+
     # Вставка интеграций
     await db.integrations.insert_many(integrations)
-    
+
     print("✅ Демо-данные созданы успешно!")
     print(f"📊 Создано:")
     print(f"   - Клиентов: {len(clients)}")
     print(f"   - Сообщений: {len(messages)}")
     print(f"   - Объявлений: {len(listings)}")
     print(f"   - Интеграций: {len(integrations)}")
+
 
 if __name__ == "__main__":
     asyncio.run(create_demo_data())

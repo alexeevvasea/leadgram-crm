@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
-from typing import List, Dict
+from typing import List, Dict, Any
 from backend.models.integration import Integration, IntegrationCreate, IntegrationUpdate
 from backend.models.message import MessageCreate
 from backend.services.message_service import MessageService
@@ -20,7 +20,7 @@ client_service = ClientService(db.clients)
 
 
 @router.get("/", response_model=List[Integration])
-async def get_integrations(user_id: str = Depends(get_user_id)):
+async def get_integrations(user_id: str = Depends(get_user_id)) -> List[Integration]:
     """Получить список интеграций"""
     cursor = db.integrations.find({"user_id": user_id})
     integrations = await cursor.to_list(length=100)
@@ -30,7 +30,7 @@ async def get_integrations(user_id: str = Depends(get_user_id)):
 @router.post("/", response_model=Integration)
 async def create_integration(
     integration_data: IntegrationCreate, user_id: str = Depends(get_user_id)
-):
+) -> Integration:
     """Создать новую интеграцию"""
     integration = Integration(**integration_data.model_dump(), user_id=user_id)
     await db.integrations.insert_one(integration.model_dump())
@@ -38,12 +38,10 @@ async def create_integration(
 
 
 @router.get("/{integration_id}", response_model=Integration)
-async def get_integration(integration_id: str, user_id: str = Depends(get_user_id)):
+async def get_integration(integration_id: str, user_id: str = Depends(get_user_id)) -> Integration:  # type: ignore[func-returns-value]
     """Получить интеграцию по ID"""
-    integration = await db.integrations.find_one(
-        {"id": integration_id, "user_id": user_id}
-    )
-    if not integration:
+    integration = await db.integrations.find_one({"id": integration_id, "user_id": user_id})  # type: ignore[func-returns-value]
+    if integration is None:
         raise HTTPException(status_code=404, detail="Integration not found")
     return Integration(**integration)
 
@@ -53,7 +51,7 @@ async def update_integration(
     integration_id: str,
     update_data: IntegrationUpdate,
     user_id: str = Depends(get_user_id),
-):
+) -> Integration:
     """Обновить интеграцию"""
     update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
 
@@ -68,7 +66,7 @@ async def update_integration(
 
 
 @router.delete("/{integration_id}")
-async def delete_integration(integration_id: str, user_id: str = Depends(get_user_id)):
+async def delete_integration(integration_id: str, user_id: str = Depends(get_user_id)) -> Dict[str, str]:
     """Удалить интеграцию"""
     result = await db.integrations.delete_one(
         {"id": integration_id, "user_id": user_id}
@@ -79,48 +77,39 @@ async def delete_integration(integration_id: str, user_id: str = Depends(get_use
 
 
 @router.post("/webhook/{integration_id}")
-async def handle_webhook(integration_id: str, request: Request):
+async def handle_webhook(integration_id: str, request: Request) -> Dict[str, str]:  # type: ignore[func-returns-value]
     """Обработать webhook от внешних сервисов"""
-    try:
-        # Получаем данные webhook
-        body = await request.json()
+    body = await request.json()
 
-        # Находим интеграцию
-        integration = await db.integrations.find_one({"id": integration_id})
-        if not integration:
-            raise HTTPException(status_code=404, detail="Integration not found")
+    integration = await db.integrations.find_one({"id": integration_id})  # type: ignore[func-returns-value]
+    if not integration:
+        raise HTTPException(status_code=404, detail="Integration not found")
 
-        # Обрабатываем в зависимости от типа интеграции
-        if integration["type"] == "telegram":
-            await handle_telegram_webhook(body, integration["user_id"])
-        elif integration["type"] == "whatsapp":
-            await handle_whatsapp_webhook(body, integration["user_id"])
-        elif integration["type"] == "olx":
-            await handle_olx_webhook(body, integration["user_id"])
+    if integration["type"] == "telegram":
+        await handle_telegram_webhook(body, integration["user_id"])
+    elif integration["type"] == "whatsapp":
+        await handle_whatsapp_webhook(body, integration["user_id"])
+    elif integration["type"] == "olx":
+        await handle_olx_webhook(body, integration["user_id"])
 
-        return {"message": "Webhook processed successfully"}
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Webhook processing error: {str(e)}"
-        )
+    return {"message": "Webhook processed successfully"}
 
 
-async def handle_telegram_webhook(data: Dict, user_id: str):
+async def handle_telegram_webhook(data: Dict[str, Any], user_id: str) -> None:
     """Обработка webhook от Telegram"""
     # Здесь логика обработки сообщений из Telegram
     # Это заглушка для демонстрации
     pass
 
 
-async def handle_whatsapp_webhook(data: Dict, user_id: str):
+async def handle_whatsapp_webhook(data: Dict[str, Any], user_id: str) -> None:
     """Обработка webhook от WhatsApp"""
     # Здесь логика обработки сообщений из WhatsApp
     # Это заглушка для демонстрации
     pass
 
 
-async def handle_olx_webhook(data: Dict, user_id: str):
+async def handle_olx_webhook(data: Dict[str, Any], user_id: str) -> None:
     """Обработка webhook от OLX"""
     # Здесь логика обработки сообщений из OLX
     # Это заглушка для демонстрации
@@ -128,12 +117,10 @@ async def handle_olx_webhook(data: Dict, user_id: str):
 
 
 @router.post("/test/{integration_id}")
-async def test_integration(integration_id: str, user_id: str = Depends(get_user_id)):
+async def test_integration(integration_id: str, user_id: str = Depends(get_user_id)) -> Dict[str, str]:  # type: ignore[func-returns-value]
     """Тестировать интеграцию"""
-    integration = await db.integrations.find_one(
-        {"id": integration_id, "user_id": user_id}
-    )
-    if not integration:
+    integration = await db.integrations.find_one({"id": integration_id, "user_id": user_id})  # type: ignore[func-returns-value]
+    if integration is None:
         raise HTTPException(status_code=404, detail="Integration not found")
 
     # Имитация тестового сообщения

@@ -1,11 +1,11 @@
-from motor.motor_asyncio import AsyncIOMotorCollection
+from backend.utils.motor import MotorCollection
 from backend.models.message import Message, MessageCreate, MessageResponse, MessageType
 from typing import List, Optional
 from datetime import datetime, timedelta
 
 
 class MessageService:
-    def __init__(self, collection: AsyncIOMotorCollection):
+    def __init__(self, collection: MotorCollection):
         self.collection = collection
 
     async def create_message(

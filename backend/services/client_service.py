@@ -1,11 +1,11 @@
-from motor.motor_asyncio import AsyncIOMotorCollection
+from backend.utils.motor import MotorCollection
 from backend.models.client import Client, ClientCreate, ClientUpdate, ClientStatus
 from typing import List, Optional, Dict
 from datetime import datetime, timedelta
 
 
 class ClientService:
-    def __init__(self, collection: AsyncIOMotorCollection):
+    def __init__(self, collection: MotorCollection):
         self.collection = collection
 
     async def create_client(self, client_data: ClientCreate, user_id: str) -> Client:

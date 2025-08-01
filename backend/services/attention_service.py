@@ -1,4 +1,4 @@
-from motor.motor_asyncio import AsyncIOMotorCollection
+from backend.utils.motor import MotorCollection
 from typing import List, Dict
 from backend.models.message import MessageType
 from datetime import datetime, timedelta
@@ -7,9 +7,9 @@ from datetime import datetime, timedelta
 class AttentionService:
     def __init__(
         self,
-        client_collection: AsyncIOMotorCollection,
-        message_collection: AsyncIOMotorCollection,
-        listing_collection: AsyncIOMotorCollection,
+        client_collection: MotorCollection,
+        message_collection: MotorCollection,
+        listing_collection: MotorCollection,
     ):
         self.client_collection = client_collection
         self.message_collection = message_collection
@@ -158,7 +158,7 @@ class AttentionService:
         """Получает краткую сводку для дашборда"""
         attention_listings = await self.get_listings_requiring_attention(user_id)
 
-        reasons_count = {}
+        reasons_count: Dict[str, int] = {}
         for listing in attention_listings:
             reason = listing["reason"]
             reasons_count[reason] = reasons_count.get(reason, 0) + 1

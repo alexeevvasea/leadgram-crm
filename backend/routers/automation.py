@@ -26,8 +26,8 @@ async def create_automation(
     user_id: str = Depends(get_user_id)
 ):
     """Создать новую автоматизацию"""
-    automation = Automation(**automation_data.dict(), user_id=user_id)
-    await db.automations.insert_one(automation.dict())
+    automation = Automation(**automation_data.model_dump(), user_id=user_id)
+    await db.automations.insert_one(automation.model_dump())
     return automation
 
 @router.get("/{automation_id}", response_model=Automation)
@@ -48,7 +48,7 @@ async def update_automation(
     user_id: str = Depends(get_user_id)
 ):
     """Обновить автоматизацию"""
-    update_dict = {k: v for k, v in update_data.dict().items() if v is not None}
+    update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
     
     result = await db.automations.update_one(
         {"id": automation_id, "user_id": user_id},

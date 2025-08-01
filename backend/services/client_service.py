@@ -8,8 +8,8 @@ class ClientService:
         self.collection = collection
 
     async def create_client(self, client_data: ClientCreate, user_id: str) -> Client:
-        client = Client(**client_data.dict(), user_id=user_id)
-        await self.collection.insert_one(client.dict())
+        client = Client(**client_data.model_dump(), user_id=user_id)
+        await self.collection.insert_one(client.model_dump())
         return client
 
     async def get_clients(self, user_id: str, status: Optional[ClientStatus] = None, 
@@ -30,7 +30,7 @@ class ClientService:
         return Client(**client) if client else None
 
     async def update_client(self, client_id: str, user_id: str, update_data: ClientUpdate) -> Optional[Client]:
-        update_dict = {k: v for k, v in update_data.dict().items() if v is not None}
+        update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
         update_dict["updated_at"] = datetime.utcnow()
         
         result = await self.collection.update_one(

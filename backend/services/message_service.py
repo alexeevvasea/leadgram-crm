@@ -1,5 +1,5 @@
 from motor.motor_asyncio import AsyncIOMotorCollection
-from backend.models.message import Message, MessageCreate, MessageResponse
+from backend.models.message import Message, MessageCreate, MessageResponse, MessageType
 from typing import List, Optional
 from datetime import datetime, timedelta
 
@@ -25,7 +25,7 @@ class MessageService:
         message_data = MessageCreate(
             client_id=response_data.client_id,
             content=response_data.content,
-            message_type="outgoing",
+            message_type=MessageType.OUTGOING,
             source="system"
         )
         return await self.create_message(message_data, user_id)
@@ -41,7 +41,7 @@ class MessageService:
         """Получает количество непрочитанных сообщений"""
         return await self.collection.count_documents({
             "user_id": user_id,
-            "message_type": "incoming",
+            "message_type": MessageType.INCOMING.value,
             "is_read": False
         })
 
